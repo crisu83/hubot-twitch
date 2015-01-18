@@ -29,7 +29,7 @@ class Twitch extends Adapter
       debug: process.env.HUBOT_TWITCH_DEBUG || false
 
   send: (envelope, strings...) ->
-    target = @getTargetFromEnvelope envelope
+    target = envelope.room
     @logger.info "Twitch.send: #{@robot.name} to #{target}: '#{strings.join " "}'"
     @logger.debug "envelope=#{JSON.stringify envelope}"
     for message in strings
@@ -128,15 +128,6 @@ class Twitch extends Adapter
       msg = new LeaveMessage user
       msg.text = reason
       @receive msg
-
-  getTargetFromEnvelope: (envelope) ->
-    {user, room} = envelope
-    # reply to user in room
-    if user?.room then user.room
-    # reply directly
-    else if user?.name then user.name
-    # message to channel
-    else if room then room
 
   createUser: (channel, nick) ->
     @logger.info "Twitch.createUser: #{nick} for #{channel}"
