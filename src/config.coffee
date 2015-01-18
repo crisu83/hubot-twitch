@@ -1,8 +1,6 @@
 class Config
   STORAGE_KEY: "twitch.config"
 
-  VALID_KEYS: ["show_greet", "show_follows"]
-
   constructor: (@robot) ->
 
   get: (key) ->
@@ -19,8 +17,11 @@ class Config
       @robot.logger.error "ERROR: Failed to save config."
     @robot.logger.info "Config.set: #{@STORAGE_KEY}.#{key} = #{value} (#{old})"
 
-  exists: (key) ->
-    @VALID_KEYS.indexOf key isnt -1
+  remove: (key) ->
+    data = @load()
+    value = data[key]
+    delete data[key]
+    @robot.logger.info "Config.remove: #{@STORAGE_KEY}.#{key} (#{value})"
 
   load: () ->
     @robot.brain[@STORAGE_KEY] || {}
