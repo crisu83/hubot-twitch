@@ -1,6 +1,7 @@
 # Hubot dependencies
 {Robot, Adapter, TextMessage, EnterMessage, LeaveMessage, Response} = require "hubot"
 
+qs = require "querystring"
 express = require "express"
 irc = require "irc"
 Config = require "./config"
@@ -12,7 +13,6 @@ class Twitch extends Adapter
     @init()
     @logger = robot.logger
     @config = new Config robot
-    @initApi()
 
   init: ->
     # todo: check that nick and password has been set
@@ -34,10 +34,23 @@ class Twitch extends Adapter
     # static pages
     @robot.router.use express.static("#{__dirname}/../public")
 
-    # twitch authentication
-    @robot.router.get "/api/twitch/auth", (req, res) =>
+    @robot.router.post "/api/twitch/init", (req, res) =>
       unless process.env.HUBOT_TWITCH_CLIENT_REDIRECT_URI
         throw new Error "HUBOT_TWITCH_CLIENT_REDIRECT_URI not set; try export=HUBOT_TWITCH_CLIENT_REDIRECT_URI=myredirecturi"
+      clientId = process.env.HUBOT_TWITCH_CLIENT_ID
+      redirectUri = process.env.HUBOT_TWITCH_CLIENT_REDIRECT_URI
+      scope = process.env.HUBOT_TWITCH_CLIENT_SCOPE || ""
+      params =
+        response_type: "code"
+        client_id: clientId
+        redirect_uri: redirectUri
+        scope: scope
+      data =
+        url: "#{@twitchClient.API_URL}/oauth2/authorize?#{qs.stringify params}"
+      res.send data
+
+    # twitch authentication
+    @robot.router.get "/api/twitch/auth", (req, res) =>
       code = req.param "code"
       if code
         @logger.info "AUTH: received code #{code}"
@@ -68,6 +81,7 @@ class Twitch extends Adapter
     @createIrcClient()
     @createTwitchClient()
     @emit "connected"
+    @initApi()
 
   createIrcClient: ->
     clientOptions =
