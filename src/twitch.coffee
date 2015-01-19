@@ -28,23 +28,26 @@ class Twitch extends Adapter
       server: process.env.HUBOT_TWITCH_SERVER || "irc.twitch.tv"
       port: process.env.HUBOT_TWITCH_PORT || 6667
       realName: process.env.HUBOT_TWITCH_REALNAME || "Hubot Twitch"
+      twitchClientId: process.env.HUBOT_TWITCH_CLIENT_ID
+      twitchRedirectUri: process.env.HUBOT_TWITCH_CLIENT_REDIRECT_URI
+      twitchScope: process.env.HUBOT_TWITCH_CLIENT_SCOPE || ""
       debug: process.env.HUBOT_TWITCH_DEBUG || false
+
+    @owners = process.env.HUBOT_TWITCH_OWNERS || []
+    @owners.push @options.nick
 
   initApi: ->
     # static pages
     @robot.router.use express.static("#{__dirname}/../public")
 
     @robot.router.post "/api/twitch/init", (req, res) =>
-      unless process.env.HUBOT_TWITCH_CLIENT_REDIRECT_URI
+      unless @options.twitchRedirectUri
         throw new Error "HUBOT_TWITCH_CLIENT_REDIRECT_URI not set; try export=HUBOT_TWITCH_CLIENT_REDIRECT_URI=myredirecturi"
-      clientId = process.env.HUBOT_TWITCH_CLIENT_ID
-      redirectUri = process.env.HUBOT_TWITCH_CLIENT_REDIRECT_URI
-      scope = process.env.HUBOT_TWITCH_CLIENT_SCOPE || ""
       params =
         response_type: "code"
-        client_id: clientId
-        redirect_uri: redirectUri
-        scope: scope
+        client_id: @twitchClientId
+        redirect_uri: @twitchRedirectUri
+        scope: @twitchScope
       data =
         url: "#{@twitchClient.API_URL}/oauth2/authorize?#{qs.stringify params}"
       res.send data
@@ -54,8 +57,7 @@ class Twitch extends Adapter
       code = req.param "code"
       if code
         @logger.info "AUTH: received code #{code}"
-        redirectUri = process.env.HUBOT_TWITCH_CLIENT_REDIRECT_URI
-        @twitchClient.auth redirectUri, code, (error, response, body) =>
+        @twitchClient.auth @twitchRedirectUri, code, (error, response, body) =>
           {access_token, scope} = body
           @logger.info "AUTH: received token #{access_token} with scope #{scope}"
           @logger.debug "body=#{JSON.stringify body}"
@@ -112,6 +114,9 @@ class Twitch extends Adapter
     clientSecret = process.env.HUBOT_TWITCH_CLIENT_SECRET
     client = new TwitchClient clientId, clientSecret, @robot
     @twitchClient = client
+
+  checkAccess: (nick) ->
+    @owners.indexOf nick isnt -1
 
   join: (channel) ->
     @ircClient.join channel =>
