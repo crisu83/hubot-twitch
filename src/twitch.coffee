@@ -32,7 +32,7 @@ class Twitch extends Adapter
       twitchRedirectUri: process.env.HUBOT_TWITCH_CLIENT_REDIRECT_URI
       twitchScope: process.env.HUBOT_TWITCH_CLIENT_SCOPE || ""
       debug: process.env.HUBOT_TWITCH_DEBUG || false
-      owners: process.env.HUBOT_TWITCH_OWNERS || []
+      owners: process.env.HUBOT_TWITCH_OWNERS?.split "," || []
 
   initApi: ->
     # static pages
