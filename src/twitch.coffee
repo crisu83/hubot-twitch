@@ -1,6 +1,7 @@
 # Hubot dependencies
 {Robot, Adapter, TextMessage, EnterMessage, LeaveMessage, Response} = require "hubot"
 
+express = require "express"
 irc = require "irc"
 Config = require "./config"
 TwitchClient = require "./twitch-client"
@@ -11,6 +12,7 @@ class Twitch extends Adapter
     @init()
     @logger = robot.logger
     @config = new Config robot
+    @initApi()
 
   init: ->
     # todo: check that nick and password has been set
@@ -22,11 +24,34 @@ class Twitch extends Adapter
     @options =
       nick: process.env.HUBOT_TWITCH_USERNAME
       password: process.env.HUBOT_TWITCH_PASSWORD
-      channels: process.env.HUBOT_TWITCH_CHANNELS?.split(",") || []
+      channels: process.env.HUBOT_TWITCH_CHANNELS?.split "," || []
       server: process.env.HUBOT_TWITCH_SERVER || "irc.twitch.tv"
       port: process.env.HUBOT_TWITCH_PORT || 6667
       realName: process.env.HUBOT_TWITCH_REALNAME || "Hubot Twitch"
       debug: process.env.HUBOT_TWITCH_DEBUG || false
+
+  initApi: ->
+    # static pages
+    @robot.router.use express.static("#{__dirname}/../public")
+
+    # twitch authentication
+    @robot.router.get "/api/twitch/auth", (req, res) =>
+      unless process.env.HUBOT_TWITCH_CLIENT_REDIRECT_URI
+        throw new Error "HUBOT_TWITCH_CLIENT_REDIRECT_URI not set; try export=HUBOT_TWITCH_CLIENT_REDIRECT_URI=myredirecturi"
+      code = req.param "code"
+      if code
+        @logger.info "AUTH: received code #{code}"
+        redirectUri = process.env.HUBOT_TWITCH_CLIENT_REDIRECT_URI
+        @twitchClient.auth redirectUri, code, (error, response, body) =>
+          {access_token, scope} = body
+          @logger.info "AUTH: received token #{access_token} with scope #{scope}"
+          @logger.debug "body=#{JSON.stringify body}"
+          @twitchClient.accessToken = access_token
+          @emit "authenticated"
+        res.send "SUCCESS"
+      else
+        error = req.param "error"
+        res.send "ERROR: #{error}"
 
   send: (envelope, strings...) ->
     target = envelope.room
@@ -69,11 +94,9 @@ class Twitch extends Adapter
     @ircClient = client
 
   createTwitchClient: ->
-    # note: these are not yet used as authentication is not implemented yet
-    clientId = process.env.HUBOT_TWITCH_CLIENT_ID?
-    clientSecret = process.env.HUBOT_TWITCH_CLIENT_SECRET?
-    client = new TwitchClient clientId, clientSecret
-    # todo: do some initialization logic here
+    clientId = process.env.HUBOT_TWITCH_CLIENT_ID
+    clientSecret = process.env.HUBOT_TWITCH_CLIENT_SECRET
+    client = new TwitchClient clientId, clientSecret, @robot
     @twitchClient = client
 
   join: (channel) ->
