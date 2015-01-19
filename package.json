@@ -1,6 +1,6 @@
 {
   "name": "hubot-twitch-adapter",
-  "version": "0.0.5",
+  "version": "0.0.6",
   "description": "Twitch adapter for Hubot",
   "author": "Christoffer Niska <christofferniska@gmail.com>",
   "keywords": [
@@ -11,7 +11,7 @@
   ],
   "repository": {
     "type" : "git",
-    "url" : "http://github.com/crisu83/hubot-twitch-adapter.git"
+    "url" : "http://github.com/crisu83/hubot-twitch.git"
   },
   "main": "src/twitch.coffee",
   "dependencies": {
