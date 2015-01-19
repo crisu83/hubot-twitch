@@ -32,9 +32,7 @@ class Twitch extends Adapter
       twitchRedirectUri: process.env.HUBOT_TWITCH_CLIENT_REDIRECT_URI
       twitchScope: process.env.HUBOT_TWITCH_CLIENT_SCOPE || ""
       debug: process.env.HUBOT_TWITCH_DEBUG || false
-
-    @owners = process.env.HUBOT_TWITCH_OWNERS || []
-    @owners.push @options.nick
+      owners: process.env.HUBOT_TWITCH_OWNERS || []
 
   initApi: ->
     # static pages
@@ -116,16 +114,18 @@ class Twitch extends Adapter
     @twitchClient = client
 
   checkAccess: (nick) ->
-    @owners.indexOf nick isnt -1
+    access = @options.owners.indexOf(nick) isnt -1
+    @logger.info "checking access for #{nick} (#{access})"
+    access
 
   join: (channel) ->
-    @ircClient.join channel =>
+    @ircClient.join channel, =>
       @logger.info "joined #{channel}"
       user = @robot.brain.userForName @robot.name
       @receive new EnterMessage user
 
   part: (channel) ->
-    @ircClient.part channel =>
+    @ircClient.part channel, =>
       @logger.info "left #{channel}"
       user = @robot.brain.userForName @robot.name
       @receive new LeaveMessage user
