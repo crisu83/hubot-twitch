@@ -29,6 +29,7 @@ class Twitch extends Adapter
       port: process.env.HUBOT_TWITCH_PORT || 6667
       realName: process.env.HUBOT_TWITCH_REALNAME || "Hubot Twitch"
       twitchClientId: process.env.HUBOT_TWITCH_CLIENT_ID
+      twitchClientSecret: process.env.HUBOT_TWITCH_CLIENT_SECRET
       twitchRedirectUri: process.env.HUBOT_TWITCH_REDIRECT_URI
       owners: process.env.HUBOT_TWITCH_OWNERS?.split "," || []
       debug: process.env.HUBOT_TWITCH_DEBUG || false
