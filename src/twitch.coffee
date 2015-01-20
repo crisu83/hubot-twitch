@@ -10,11 +10,11 @@ TwitchClient = require "./twitch-client"
 class Twitch extends Adapter
   constructor: (robot) ->
     super robot
-    @init()
+    @configure()
     @logger = robot.logger
     @config = new Config robot
 
-  init: ->
+  configure: ->
     # todo: check that nick and password has been set
     unless process.env.HUBOT_TWITCH_USERNAME
       throw new Error "HUBOT_TWITCH_USERNAME not set; try export HUBOT_TWITCH_USERNAME=myusername"
@@ -29,42 +29,9 @@ class Twitch extends Adapter
       port: process.env.HUBOT_TWITCH_PORT || 6667
       realName: process.env.HUBOT_TWITCH_REALNAME || "Hubot Twitch"
       twitchClientId: process.env.HUBOT_TWITCH_CLIENT_ID
-      twitchRedirectUri: process.env.HUBOT_TWITCH_CLIENT_REDIRECT_URI
-      twitchScope: process.env.HUBOT_TWITCH_CLIENT_SCOPE || ""
-      debug: process.env.HUBOT_TWITCH_DEBUG || false
+      twitchRedirectUri: process.env.HUBOT_TWITCH_REDIRECT_URI
       owners: process.env.HUBOT_TWITCH_OWNERS?.split "," || []
-
-  initApi: ->
-    # static pages
-    @robot.router.use express.static("#{__dirname}/../public")
-
-    @robot.router.post "/api/twitch/init", (req, res) =>
-      unless @options.twitchRedirectUri
-        throw new Error "HUBOT_TWITCH_CLIENT_REDIRECT_URI not set; try export=HUBOT_TWITCH_CLIENT_REDIRECT_URI=myredirecturi"
-      params =
-        response_type: "code"
-        client_id: @twitchClientId
-        redirect_uri: @twitchRedirectUri
-        scope: @twitchScope
-      data =
-        url: "#{@twitchClient.API_URL}/oauth2/authorize?#{qs.stringify params}"
-      res.send data
-
-    # twitch authentication
-    @robot.router.get "/api/twitch/auth", (req, res) =>
-      code = req.param "code"
-      if code
-        @logger.info "AUTH: received code #{code}"
-        @twitchClient.auth @twitchRedirectUri, code, (error, response, body) =>
-          {access_token, scope} = body
-          @logger.info "AUTH: received token #{access_token} with scope #{scope}"
-          @logger.debug "body=#{JSON.stringify body}"
-          @twitchClient.accessToken = access_token
-          @emit "authenticated"
-        res.send "SUCCESS"
-      else
-        error = req.param "error"
-        res.send "ERROR: #{error}"
+      debug: process.env.HUBOT_TWITCH_DEBUG || false
 
   send: (envelope, strings...) ->
     target = envelope.room
@@ -81,7 +48,6 @@ class Twitch extends Adapter
     @createIrcClient()
     @createTwitchClient()
     @emit "connected"
-    @initApi()
 
   createIrcClient: ->
     clientOptions =
@@ -108,14 +74,15 @@ class Twitch extends Adapter
     @ircClient = client
 
   createTwitchClient: ->
-    clientId = process.env.HUBOT_TWITCH_CLIENT_ID
-    clientSecret = process.env.HUBOT_TWITCH_CLIENT_SECRET
-    client = new TwitchClient clientId, clientSecret, @robot
+    clientId = @options.twitchClientId
+    clientSecret = @options.twitchClientSecret
+    redirectUri = @options.twitchRedirectUri
+    client = new TwitchClient clientId, clientSecret, redirectUri, @robot
     @twitchClient = client
 
   checkAccess: (nick) ->
     access = @options.owners.indexOf(nick) isnt -1
-    @logger.info "checking access for #{nick} (#{access})"
+    @logger.info "access check for #{nick} (#{access})"
     access
 
   join: (channel) ->
@@ -134,36 +101,36 @@ class Twitch extends Adapter
     @logger.error "ERROR: #{message.command}: #{message.args.join(' ')}"
 
   onJoin: (channel, nick, message) =>
-    @logger.info "Twitch.onJoin: #{nick} join #{channel}"
+    @logger.info "#{nick} joined #{channel}"
     @logger.debug "message=#{JSON.stringify message}"
     user = @createUser channel, nick
     @receive new EnterMessage user
 
   onKick: (channel, nick, from, reason, message) =>
-    @logger.info "Twitch.onKick: #{from} kicked #{nick} from #{channel}; '#{reason}'"
+    @logger.info "#{from} kicked #{nick} from #{channel}; '#{reason}'"
     @logger.debug "message=#{JSON.stringify message}"
 
   onMessage: (nick, channel, text, message) =>
-    @logger.info "Twitch.onMessage: #{nick} to #{channel}: '#{text}'"
+    @logger.info "#{nick} sent message to #{channel}: '#{text}'"
     @logger.debug "message=#{JSON.stringify message}"
     user = @createUser channel, nick
     @receive new TextMessage user, text
 
   onNames: (channel, nicks) =>
-    @logger.info "Twitch.onNames: #{JSON.stringify nicks}"
+    @logger.info "names #{JSON.stringify nicks}"
 
   onNotice: (nick, channel, text, message) =>
-    @logger.info "Twitch.onNotice: #{nick} to #{channel}: '#{text}'"
+    @logger.info "#{nick} sent notice to #{channel}: '#{text}'"
     @logger.debug "message=#{JSON.stringify message}"
 
   onPart: (channel, nick, reason, message) =>
-    @logger.info "Twitch.onPart: #{nick} left #{channel}"
+    @logger.info "#{nick} left #{channel}"
     @logger.debug "message=#{JSON.stringify message}"
     user = @createUser channel, nick
     @receive new LeaveMessage user
 
   onQuit: (nick, reason, channels, message) =>
-    @logger.info "Twitch.onQuit: #{nick} quit #{channels.join ", "}"
+    @logger.info "#{nick} quit #{channels.join ", "}; '#{reason}'"
     @logger.debug "message=#{JSON.stringify message}"
     for channel in channels
       user = @createUser '', nick
@@ -172,7 +139,7 @@ class Twitch extends Adapter
       @receive msg
 
   createUser: (channel, nick) ->
-    @logger.info "Twitch.createUser: #{nick} for #{channel}"
+    @logger.info "user #{nick} created for #{channel}"
     user = @robot.brain.userForId nick
     user.name = nick
     user.room = channel

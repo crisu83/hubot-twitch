@@ -4,29 +4,34 @@ qs = require "querystring"
 class TwitchClient
   API_URL: "https://api.twitch.tv/kraken"
 
-  constructor: (@clientId, @clientSecret, @robot) ->
-    @accessToken = null
+  constructor: (@clientId, @clientSecret, @redirectUri, @robot) ->
 
-  api: (options, cb) ->
+  api: (options, token, cb) ->
     options.method = options.method || "get"
     options.headers = {}
-    options.url = @API_URL + options.url
+    options.url = @apiUrl + options.url
     options.json = true
-    if @accessToken
-      options.headers["Authorization"] = "OAuth #{@accessToken}"
+    if token?.length isnt 0
+      options.headers["Authorization"] = "OAuth #{token}"
     @robot.logger.info "TWITCH: Call API: #{options.method} #{options.url}"
     @robot.logger.debug "options=#{JSON.stringify options}"
     console.log options.headers
     request options, (error, response, body) ->
-      if cb
-        cb error, response, body
+      cb?(error, response, body)
 
-  auth: (redirectUri, code, cb) ->
+  getAuthUrl: ->
+    params =
+      response_type: "code"
+      client_id: @clientId
+      redirect_uri: @redirectUri
+    "#{@API_URL}/oauth2/authorize?#{qs.stringify params}"
+
+  auth: (code, cb) ->
     params =
       client_id: @clientId
       client_secret: @clientSecret
       grant_type: "authorization_code"
-      redirect_uri: redirectUri
+      redirect_uri: @redirectUri
       code: code
     options =
       method: "post"

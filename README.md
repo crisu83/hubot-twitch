@@ -58,3 +58,13 @@ setx HUBOT_TWITCH_USERNAME="myusername" /m
 setx HUBOT_TWITCH_PASSWORD="oauth:mypassword" /m
 setx HUBOT_TWITCH_CHANNELS="#mychannel" /m
 ```
+
+### Additional configuration
+
+The adapter also supports the following environmental variables:
+
+- ```HUBOT_TWITCH_CLIENT_ID```
+- ```HUBOT_TWITCH_CLIENT_SECRET```
+- ```HUBOT_TWITCH_REDIRECT_URI```
+- ```HUBOT_TWITCH_OWNERS```
+- ```HUBOT_TWITCH_DEBUG```
