@@ -5,6 +5,7 @@ qs = require "querystring"
 express = require "express"
 irc = require "irc"
 Config = require "./config"
+Memory = require "./memory"
 TwitchClient = require "./twitch-client"
 
 class Twitch extends Adapter
@@ -13,9 +14,9 @@ class Twitch extends Adapter
     @configure()
     @logger = robot.logger
     @config = new Config robot
+    @memory = new Memory robot
 
   configure: ->
-    # todo: check that nick and password has been set
     unless process.env.HUBOT_TWITCH_USERNAME
       throw new Error "HUBOT_TWITCH_USERNAME not set; try export HUBOT_TWITCH_USERNAME=myusername"
     unless process.env.HUBOT_TWITCH_PASSWORD

@@ -23,7 +23,7 @@ class Config
     delete data[key]
     @robot.logger.info "Config.remove: #{@STORAGE_KEY}.#{key} (#{value})"
 
-  load: () ->
+  load: ->
     @robot.brain[@STORAGE_KEY] || {}
 
   save: (data) ->
