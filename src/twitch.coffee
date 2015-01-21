@@ -5,7 +5,6 @@ qs = require "querystring"
 express = require "express"
 irc = require "irc"
 Config = require "./config"
-Memory = require "./memory"
 TwitchClient = require "./twitch-client"
 
 class Twitch extends Adapter
@@ -14,7 +13,6 @@ class Twitch extends Adapter
     @configure()
     @logger = robot.logger
     @config = new Config robot
-    @memory = new Memory robot
 
   configure: ->
     unless process.env.HUBOT_TWITCH_USERNAME

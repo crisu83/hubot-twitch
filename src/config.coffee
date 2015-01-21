@@ -6,7 +6,7 @@ class Config
   get: (key) ->
     data = @load()
     value = data[key]
-    @robot.logger.info "Config.get: #{@STORAGE_KEY}.#{key} (#{value})"
+    @robot.logger.info "CONFIG: Get #{@STORAGE_KEY}.#{key} (#{value})"
     value
 
   set: (key, value) ->
@@ -15,13 +15,13 @@ class Config
     data[key] = value
     unless @save data
       @robot.logger.error "ERROR: Failed to save config."
-    @robot.logger.info "Config.set: #{@STORAGE_KEY}.#{key} = #{value} (#{old})"
+    @robot.logger.info "CONFIG: Set #{@STORAGE_KEY}.#{key} = #{value} (#{old})"
 
   remove: (key) ->
     data = @load()
     value = data[key]
     delete data[key]
-    @robot.logger.info "Config.remove: #{@STORAGE_KEY}.#{key} (#{value})"
+    @robot.logger.info "CONFIG: Remove #{@STORAGE_KEY}.#{key} (#{value})"
 
   load: ->
     @robot.brain[@STORAGE_KEY] || {}
