@@ -33,12 +33,14 @@ class Memory
     @robot.logger.info "Memory.ask: searching for '#{query}'"
     @search.query(query).end (error, ids) =>
       throw new Error error if error
-      @robot.logger.debug "ids=#{ids} data=#{data}"
       answer = null
       if ids.length isnt 0
         key = ids[0]
         answer = data[key]
         @robot.logger.info "Memory.ask: answer to '#{query}' is '#{answer}' (#{key})"
+      else
+        @robot.logger.info "Memory.ask: failed to find answer in result #{result}"
+        @robot.logger.debug "ids=#{ids} data=#{data}"
       cb answer
 
   generateId: ->

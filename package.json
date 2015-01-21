@@ -1,6 +1,6 @@
 {
   "name": "hubot-twitch-adapter",
-  "version": "0.0.17",
+  "version": "0.0.18",
   "description": "Twitch adapter for Hubot",
   "author": "Christoffer Niska <christofferniska@gmail.com>",
   "keywords": [
