@@ -1,50 +1,39 @@
-reds = require "reds"
+lunr = require "lunr"
 shortid = require "shortid"
 
 class Memory
   STORAGE_KEY: "twitch.memory"
 
   constructor: (@robot) ->
-    @search = reds.createSearch "things";
-    @recall()
-
-  recall: ->
-    data = @load()
-    num = 0
-    for id, thing of data
-      @index thing, id
-      num++
-    @robot.logger.info "Memory.recall: #{num} things recalled"
-
-  index: (thing, id) ->
-    @search.index thing, id
+    @index = lunr ->
+      @ref 'id'
+      @field 'body'
 
   tell: (thing) ->
     data = @load()
-    id = @generateId()
-    data[id] = thing
-    @index thing, id
+    item = @createItem thing
+    @index.add item
+    data[item.id] = item.body
     unless @save data
       @robot.logger.error "ERROR: Failed to learn a new thing."
-    @robot.logger.info "Memory.tell: learned that '#{thing}'"
+    @robot.logger.info "Memory.tell: learned that '#{thing}' (#{item.id})"
 
-  ask: (query, cb) ->
+  ask: (query) ->
     data = @load()
     @robot.logger.info "Memory.ask: searching for '#{query}'"
-    @search.query(query).end (error, ids) =>
-      throw new Error error if error
-      answer = null
-      if ids.length isnt 0
-        key = ids[0]
-        answer = data[key]
-        @robot.logger.info "Memory.ask: answer to '#{query}' is '#{answer}' (#{key})"
-      else
-        @robot.logger.info "Memory.ask: failed to find answer in result #{result}"
-        @robot.logger.debug "ids=#{ids} data=#{data}"
-      cb answer
+    result = @index.search query
+    if result.length isnt 0 and data[result[0].ref]
+      data[result[0].ref]
+    else
+      @robot.logger.info "Memory.ask: failed to find answer in result #{JSON.stringify result}"
+      @robot.logger.debug "result=#{JSON.stringify result} data=#{JSON.stringify data}"
+      null
 
-  generateId: ->
-    shortid.generate()
+  createItem: (thing) ->
+    item =
+      id: shortid.generate()
+      body: thing
+    item
 
   load: ->
     @robot.brain[@STORAGE_KEY] || {}
