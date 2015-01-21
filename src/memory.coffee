@@ -1,13 +1,15 @@
 lunr = require "lunr"
 shortid = require "shortid"
+_ = require "lodash"
 
 class Memory
   STORAGE_KEY: "twitch.memory"
 
   constructor: (@robot) ->
     @index = lunr ->
-      @ref 'id'
-      @field 'body'
+      @ref "id"
+      @field "body"
+      @field "time"
 
   tell: (thing) ->
     data = @load()
@@ -22,8 +24,12 @@ class Memory
     data = @load()
     @robot.logger.info "Memory.ask: searching for '#{query}'"
     result = @index.search query
-    if result.length isnt 0 and data[result[0].ref]
-      data[result[0].ref]
+    if result.length isnt 0
+      items = []
+      for match in result
+        items.push data[match.ref]
+      items = _.sortBy items, 'time'
+      items[0]
     else
       @robot.logger.info "Memory.ask: failed to find answer in result #{JSON.stringify result}"
       @robot.logger.debug "result=#{JSON.stringify result} data=#{JSON.stringify data}"
@@ -33,6 +39,7 @@ class Memory
     item =
       id: shortid.generate()
       body: thing
+      time: +new Date()
     item
 
   load: ->
