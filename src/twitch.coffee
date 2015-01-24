@@ -1,10 +1,6 @@
-# Hubot dependencies
 {Robot, Adapter, TextMessage, EnterMessage, LeaveMessage, Response} = require "hubot"
 
-qs = require "querystring"
-express = require "express"
 irc = require "irc"
-Config = require "./config"
 TwitchClient = require "./twitch-client"
 
 class Twitch extends Adapter
@@ -12,7 +8,6 @@ class Twitch extends Adapter
     super robot
     @configure()
     @logger = robot.logger
-    @config = new Config robot
 
   configure: ->
     unless process.env.HUBOT_TWITCH_USERNAME
