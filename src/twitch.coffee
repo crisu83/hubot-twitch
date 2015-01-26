@@ -8,6 +8,7 @@ class Twitch extends Adapter
     super robot
     @configure()
     @logger = robot.logger
+    @channels = []
 
   configure: ->
     unless process.env.HUBOT_TWITCH_USERNAME
@@ -18,7 +19,6 @@ class Twitch extends Adapter
     @options =
       nick: process.env.HUBOT_TWITCH_USERNAME
       password: process.env.HUBOT_TWITCH_PASSWORD
-      channels: process.env.HUBOT_TWITCH_CHANNELS?.split "," || []
       server: process.env.HUBOT_TWITCH_SERVER || "irc.twitch.tv"
       port: process.env.HUBOT_TWITCH_PORT || 6667
       realName: process.env.HUBOT_TWITCH_REALNAME || "Hubot Twitch"
@@ -81,16 +81,27 @@ class Twitch extends Adapter
     access
 
   join: (channel) ->
-    @ircClient.join channel, =>
-      @logger.info "joined #{channel}"
-      user = @robot.brain.userForName @robot.name
-      @receive new EnterMessage user
+    if @active channel
+      @logger.info "already in channel #{channel}"
+      false
+    else
+      @ircClient.join channel, =>
+        @channels.push channel
+        @logger.info "joined #{channel}"
+      true
 
   part: (channel) ->
-    @ircClient.part channel, =>
-      @logger.info "left #{channel}"
-      user = @robot.brain.userForName @robot.name
-      @receive new LeaveMessage user
+    unless @active channel
+      @logger.info "not in channel #{channel}"
+      false
+    else
+      @ircClient.part channel, =>
+        @channels.splice @channels.indexOf(channel), 1
+        @logger.info "left #{channel}"
+      true
+
+  active: (channel) ->
+    @channels.indexOf(channel) isnt -1
 
   onError: (message) =>
     @logger.error "ERROR: #{message.command}: #{message.args.join(' ')}"
