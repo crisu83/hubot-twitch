@@ -28,6 +28,8 @@ class Twitch extends Adapter
       owners: process.env.HUBOT_TWITCH_OWNERS?.split "," || []
       debug: process.env.HUBOT_TWITCH_DEBUG || false
 
+    @robot.name = @options.nick
+
   send: (envelope, strings...) ->
     target = envelope.room
     @logger.info "Twitch.send: #{@robot.name} to #{target}: '#{strings.join " "}'"
@@ -81,24 +83,22 @@ class Twitch extends Adapter
     access
 
   join: (channel) ->
-    if @active channel
-      @logger.info "already in channel #{channel}"
-      false
-    else
+    success = false
+    unless @active channel
+      success = true
       @ircClient.join channel, =>
         @channels.push channel
         @logger.info "joined #{channel}"
-      true
+    success
 
   part: (channel) ->
-    unless @active channel
-      @logger.info "not in channel #{channel}"
-      false
-    else
+    success = false
+    if @active channel
+      success = true
       @ircClient.part channel, =>
         @channels.splice @channels.indexOf(channel), 1
         @logger.info "left #{channel}"
-      true
+    success
 
   active: (channel) ->
     @channels.indexOf(channel) isnt -1

@@ -42,9 +42,9 @@ class TwitchClient
     @api options, token, cb
 
   api: (options, token, cb) ->
-    options.method = options.method || "get"
-    options.headers = {}
-    options.url = @API_URL + options.url
+    options.method = options.method or "get"
+    options.headers = options.headers or {}
+    options.url = @API_URL + (options.url or '')
     options.json = true
     if token
       options.headers["Authorization"] = "OAuth #{token}"
