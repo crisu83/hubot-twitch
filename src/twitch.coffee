@@ -26,6 +26,7 @@ class Twitch extends Adapter
       twitchClientSecret: process.env.HUBOT_TWITCH_CLIENT_SECRET
       twitchRedirectUri: process.env.HUBOT_TWITCH_REDIRECT_URI
       owners: process.env.HUBOT_TWITCH_OWNERS?.split "," || []
+      channels: process.env.HUBOT_TWITCH_CHANNELS?.split "," || []
       debug: process.env.HUBOT_TWITCH_DEBUG || false
 
     @robot.name = @options.nick
@@ -43,6 +44,7 @@ class Twitch extends Adapter
 
   run: ->
     @createIrcClient()
+    @joinChannels()
     @createTwitchClient()
     @emit "connected"
 
@@ -76,6 +78,10 @@ class Twitch extends Adapter
     redirectUri = @options.twitchRedirectUri
     client = new TwitchClient clientId, clientSecret, redirectUri, @robot
     @twitchClient = client
+
+  joinChannels: ->
+    for channel in @options.channels
+      @join channel
 
   checkAccess: (nick) ->
     access = @options.owners.indexOf(nick) isnt -1
