@@ -69,6 +69,7 @@ class Twitch extends Adapter
     client.addListener "notice", @onNotice
     client.addListener "part", @onPart
     client.addListener "quit", @onQuit
+    client.send("raw CAP REQ :twitch.tv/membership")
 
     @ircClient = client
 
