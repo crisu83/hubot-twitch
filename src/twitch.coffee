@@ -19,7 +19,7 @@ class Twitch extends Adapter
     @options =
       nick: process.env.HUBOT_TWITCH_USERNAME
       password: process.env.HUBOT_TWITCH_PASSWORD
-      server: process.env.HUBOT_TWITCH_SERVER || "irc.twitch.tv"
+      server: process.env.HUBOT_TWITCH_SERVER || "irc.chat.twitch.tv"
       port: process.env.HUBOT_TWITCH_PORT || 6667
       realName: process.env.HUBOT_TWITCH_REALNAME || "Hubot Twitch"
       twitchClientId: process.env.HUBOT_TWITCH_CLIENT_ID
