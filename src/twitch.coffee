@@ -28,6 +28,7 @@ class Twitch extends Adapter
       owners: process.env.HUBOT_TWITCH_OWNERS?.split "," || []
       channels: process.env.HUBOT_TWITCH_CHANNELS?.split "," || []
       debug: process.env.HUBOT_TWITCH_DEBUG || false
+      delay: process.env.HUBOT_TWITCH_DELAY || 1100
 
     @robot.name = @options.nick
 
@@ -57,6 +58,10 @@ class Twitch extends Adapter
       debug: @options.debug
       port: @options.port
 
+    if parseInt(@options.delay) isnt 0
+      clientOptions["floodProtection"] = true
+      clientOptions["floodProtectionDelay"] = parseInt(@options.delay)
+
     # see: http://node-irc.readthedocs.org/en/latest/API.html#client
     client = new irc.Client @options.server, @options.nick, clientOptions
 
@@ -69,7 +74,10 @@ class Twitch extends Adapter
     client.addListener "notice", @onNotice
     client.addListener "part", @onPart
     client.addListener "quit", @onQuit
+
+    client.send("raw CAP REQ :twitch.tv/commands")
     client.send("raw CAP REQ :twitch.tv/membership")
+#    client.send("raw CAP REQ :twitch.tv/tags")
 
     @ircClient = client
 
