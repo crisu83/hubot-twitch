@@ -1,0 +1,6 @@
+{
+  "name": "Hubot Twitch",
+  "description": "A Twitch adapter for Hubot",
+  "repository": "https://github.com/crisu83/hubot-twitch",
+  "keywords": ["hubot", "twitch", "chat", "bot", "adapter", "node"]
+}
