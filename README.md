@@ -68,3 +68,4 @@ The adapter also supports the following environmental variables:
 - ```HUBOT_TWITCH_REDIRECT_URI```
 - ```HUBOT_TWITCH_OWNERS```
 - ```HUBOT_TWITCH_DEBUG```
+- ```HUBOT_TWITCH_DELAY```
