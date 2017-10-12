@@ -1,8 +1,6 @@
 Twitch adapter for Hubot
 ========================
 
-[![Deploy](https://www.herokucdn.com/deploy/button.svg)](https://heroku.com/deploy)
-
 [Hubot](https://hubot.github.com) is a chat bot by GitHub, modelled after their Campfire bot.
 [Twitch](http://twitch.tv) is the world's leading video platform and community for gamers.
 This adapter allows your Hubot to join channels on Twitch.
